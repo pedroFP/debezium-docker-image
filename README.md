@@ -19,7 +19,7 @@ I prefer making the connection request manually
 
 ```bash
 curl --location --request POST 'localhost:8083/connectors/' --header 'Accept: application/json' --header 'Content-Type: application/json' --data-raw '{
-    "name": "aquaflow-development-debezium",
+    "name": "your-debezium-connection-name",
     "config": {
         "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
         "tasks.max": "1",
@@ -32,7 +32,7 @@ curl --location --request POST 'localhost:8083/connectors/' --header 'Accept: ap
         "database.server.name": "localhost",            
 
         "plugin.name": "pgoutput",
-        "topic.prefix": "aquaflow",
+        "topic.prefix": "your-kafka-topic-prefix",
         "snapshot.mode": "no_data",
         "schema.include.list": "public",
 
