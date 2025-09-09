@@ -1,5 +1,5 @@
 # Run
-
+> This project is inspired by this [YusukeKishino/debezium-rails-sample](https://github.com/YusukeKishino/debezium-rails-sample)
 ```
 $ docker compose up --build
 ```
@@ -42,9 +42,18 @@ curl --location --request POST 'localhost:8083/connectors/' --header 'Accept: ap
         "transforms.unwrap.delete.handling.mode": "drop"
     }
 }'
+```
+
+# Consume the messages
+
+Debezium will send the messages to the topics following the custom prefix the database schema (by default is public)
+ and the data table that triggered the change 
 
 
 ```
+topic "my-topic.public.posts"
+```
+
 
 # Images
 
@@ -56,4 +65,44 @@ debezium/connect            2.6      1.35GB
 debezium/debezium-ui        latest   467MB
 confluentinc/cp-kafka       7.5.0    849MB
 confluentinc/cp-zookeeper   7.5.0    849MB
+```
+
+# In Karafka
+
+```ruby
+# karafka.rb
+
+class KarafkaApp < KarafkaBase
+  consumer_groups.draw do
+    topic "my-topic.public.posts" do
+      consumer Debezium::Consumer
+    end
+  end
+end
+```
+
+```ruby
+class ApplicationConsumer < Karafka::BaseConsumer
+  def consume
+    messages.each { |message| execute(message) }
+  end
+end
+```
+
+```ruby
+# app/consumers/debezium/consumer.rb
+
+class Debezium::Consumer < ApplicationConsumer
+  def execute(message)
+    payload = message.payload
+
+    payload['payload']['op']
+
+    # op    Value	  Description	  Corresponds to
+    #  c	  Create	  INSERT        log
+    #  u	  Update	  UPDATE        log
+    #  d	  Delete	  DELETE        log
+    #  r	  Read      (snapshot)	  Snapshot data
+  end
+end
 ```
