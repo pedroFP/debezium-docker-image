@@ -49,7 +49,7 @@ curl --location --request POST 'localhost:8083/connectors/' --header 'Accept: ap
 Debezium will send the messages to the topics following the custom prefix the database schema (by default is public)
  and the data table that triggered the change 
 
-
+Example
 ```
 topic "my-topic.public.posts"
 ```
