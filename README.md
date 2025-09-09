@@ -1,4 +1,7 @@
-# Run
+# Debezium on a PostgreSQL Database
+> Docs: https://debezium.io/documentation/reference/3.2/connectors/postgresql.html 
+
+Start the project 🐋
 > This project is inspired by this [YusukeKishino/debezium-rails-sample](https://github.com/YusukeKishino/debezium-rails-sample)
 ```
 $ docker compose up --build
@@ -14,6 +17,7 @@ I prefer making the connection request manually
 >By default the connection starts on `snapshot.mode` => `inital`
 >
 > `initial`: Takes a snapshot of the structure and data of captured tables. Useful if topics have to be populated with a complete representation of the data from the captured tables.
+
 
 
 
