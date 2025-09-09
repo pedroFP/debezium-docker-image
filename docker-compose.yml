@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  cp-zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - kafka-connect
+
+  cp-kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    hostname: kafka
+    container_name: kafka
+    depends_on:
+      - cp-zookeeper
+    ports:
+      - "29092:29092"
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - kafka-connect
+
+  debezium:
+    image: debezium/connect:2.6
+    container_name: connect
+    depends_on:
+      - cp-kafka
+      - cp-zookeeper
+    ports:
+      - "8083:8083"
+    environment:
+      BOOTSTRAP_SERVERS: kafka:29092
+      GROUP_ID: 1
+      CONFIG_STORAGE_TOPIC: my-connect-configs
+      OFFSET_STORAGE_TOPIC: my-connect-offsets
+      STATUS_STORAGE_TOPIC: my-connect-status
+      KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      INTERNAL_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      REST_ADVERTISED_HOST_NAME: connect
+      REST_PORT: 8083
+    networks:
+      - kafka-connect
+
+  debezium-ui:
+    image: debezium/debezium-ui:latest
+    restart: always
+    container_name: debezium-ui
+    hostname: debezium-ui
+    depends_on:
+      - debezium
+    ports:
+      - '8080:8080'
+    environment:
+      KAFKA_CONNECT_URIS: http://connect:8083
+    networks:
+      - kafka-connect 
+
+  db:
+    image: postgres:16
+    container_name: my-postgresql-db
+    ports:
+      - 5433:5432
+    environment:
+      POSTGRES_PASSWORD: dev
+      POSTGRES_USER: dev
+    # volumes:
+    #   - db:/var/lib/postgresql/data   # uncomment if you want data to persist
+    command: ['postgres', '-c', 'wal_level=logical'] # important commant to enable debezium read the db logs
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kafka-connect
+
+networks:
+  kafka-connect:
+    driver: bridge
+
