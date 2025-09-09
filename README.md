@@ -68,6 +68,8 @@ confluentinc/cp-zookeeper   7.5.0    849MB
 ```
 
 # In Karafka
+This example does not intend to explain how to setup and config Karafka with the current setup service in the docker-compose.yml.
+To learn more about Karafka please refer to the [docs](https://karafka.io/docs/)
 
 ```ruby
 # karafka.rb
